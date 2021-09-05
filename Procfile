@@ -1,1 +1,1 @@
-web: node app.js && auth.js
+web: node app.js && node auth.js
