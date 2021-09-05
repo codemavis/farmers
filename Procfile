@@ -1,1 +1,1 @@
-web: node auth.js
+web: node app.js & node auth.js
