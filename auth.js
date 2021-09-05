@@ -14,10 +14,11 @@ const user = require('./controllers/user.controller');
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: '', // Send email
-        pass: '' // App Password
+        user: 'madolahasarel95@gmail.com', // Send email
+        pass: 'beyckkreyjgskqup' // App Password
     }
 });
+
 
 app.use(cors());
 app.use(express.json());
