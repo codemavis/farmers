@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "devStart": "nodemon app.js",
-    "devStartAuth": "nodemon auth.js"
+    "devStartAuth": "nodemon auth.js",
+    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install"
   },
   "author": "sujee",
   "license": "ISC",
