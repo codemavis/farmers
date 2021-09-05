@@ -7,7 +7,7 @@ const pool = new Pool({
     host: "ec2-50-17-255-244.compute-1.amazonaws.com",
     post: 5432,
     database: "dhpu3q9v4hnj6",
-    ssl: true
+    ssl: { rejectUnauthorized: false }
 });
 
 module.exports = pool;
