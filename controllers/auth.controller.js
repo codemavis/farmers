@@ -1,5 +1,5 @@
 require('dotenv').config();
-const client = require('./modules/client');
+const client = require('../modules/client');
 
 const express = require('express');
 const app = express();
@@ -8,8 +8,8 @@ const cors = require('cors');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-const dataAction = require('./modules/dataaction');
-const user = require('./controllers/user.controller');
+const dataAction = require('../modules/dataaction');
+const user = require('../controllers/user.controller');
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -22,12 +22,12 @@ const transporter = nodemailer.createTransport({
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req, res) => {
+exports.handleRoot = (req, res) => {
     //handle root
     res.send("hi root auth: " + req.connection.remoteAddress);
-});
+}
 
-app.post('/login', async (req, res) => {
+exports.loginUser = async (req, res) => {
     const currUser = await user.findOneByEmail(req.body.email)
     if (currUser == null) return res.status(400).send({
         code: 'ERROR',
@@ -66,18 +66,13 @@ app.post('/login', async (req, res) => {
             message: error.message
         });
     }
-});
-
-app.listen(4444, err => {
-    if (err) return console.log("ERROR", err);
-    console.log(`Listening on port ${4444}`);
-});
+}
 
 const generateAccessToken = (currUser) => {
     return jwt.sign(currUser, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '24h' }); //15s
 }
 
-app.post('/token', async (req, res) => {
+exports.getToken = async (req, res) => {
     const refreshToken = req.body.token;
     if (refreshToken == null) return res.sendStatus(401);
 
@@ -90,9 +85,9 @@ app.post('/token', async (req, res) => {
         const accessToken = generateAccessToken(currUser);
         res.json({ code: 'OK', message: 'Success', accessToken: accessToken });
     });
-});
+}
 
-app.delete('/logout', async (req, res) => {
+exports.logoutUser = async (req, res) => {
     try {
         let result = await client.query(`UPDATE authuser SET isactive=false WHERE refreshtoken='${req.body.token}'`);
         console.log('result', result);
@@ -101,7 +96,7 @@ app.delete('/logout', async (req, res) => {
         console.log('logout error', err.message);
         res.json({ code: 'ERROR', message: 'Fail', logout: true });
     }
-});
+}
 
 const checkRefreshToken = async (refreshToken) => {
     try {
@@ -125,7 +120,7 @@ const saveRefreshToken = async (userId, refreshToken) => {
     }
 }
 
-app.post('/password_reset', async (req, res) => {
+exports.passwordReset = async (req, res) => {
 
     if (req.body.resettoken && req.body.email) {
         const currUser = await user.findOneByEmail(req.body.email);
@@ -141,14 +136,14 @@ app.post('/password_reset', async (req, res) => {
         res.json({ code: 'ERROR', message: 'Invalid Token' });
     }
 
-});
+}
 
-app.post('/reset', async (req, res) => {
+exports.reset = async (req, res) => {
 
     crypto.randomBytes(32, async (err, buffer) => {
         if (err) console.log('crypto err', err.message);
 
-        const token = buffer.toString("hex").substr(0,16).toUpperCase();
+        const token = buffer.toString("hex").substr(0, 16).toUpperCase();
         const expireToken = Date.now() + 300000; //5 mins
 
         try {
@@ -189,4 +184,4 @@ app.post('/reset', async (req, res) => {
     });
 
 
-});
+}
