@@ -11,10 +11,12 @@ const nodemailer = require('nodemailer');
 const dataAction = require('../modules/dataaction');
 const user = require('../controllers/user.controller');
 
+const senderEmail = 'madolahasarel95@gmail.com';
+
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'madolahasarel95@gmail.com', // Send email
+        user: senderEmail, // Send email
         pass: 'beyckkreyjgskqup' // App Password
     }
 });
@@ -157,8 +159,8 @@ exports.reset = async (req, res) => {
             if (result.rows) {
 
                 transporter.sendMail({
-                    to: 'ayan.sujii@gmail.com',
-                    from: 'sathasivam.sujee@gmail.com',
+                    to: req.body.email,
+                    from: senderEmail,
                     subject: '[farmers.lk] Please reset your password',
                     html: `<p>We heard that you lost your farmers.lk password. Sorry about that!</p>
                     <br/>
