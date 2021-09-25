@@ -13,7 +13,7 @@ exports.dataPut = async(fileName, dataObj, req = '') => {
     let values = '';
 
     Object.keys(dataObj).map((x) => {
-        keys += `,${x}`;
+        keys += `,"${x}"`;
         values += typeof(dataObj[x]) == 'string' ? `,'${dataObj[x]}'` : `,${dataObj[x]}`;
     })
 

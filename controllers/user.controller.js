@@ -24,7 +24,7 @@ exports.create = async (req, res) => {
 
 exports.findAll = async (req, res) => {
     try {
-        let query = 'SELECT recordid,name,nic,district,mobile,email,empid FROM public."user";';
+        let query = 'SELECT recordid,name,nic,province,mobile,email,empid FROM public."user";';
         result = await dataAction.executeQuery(query);
         res.send(result.rows);
     } catch (err) {
@@ -34,7 +34,7 @@ exports.findAll = async (req, res) => {
 
 exports.findOne = async (req, res) => {
     try {
-        let result = await dataAction.executeQuery(`SELECT recordid, name, nic, district, mobile, email, 
+        let result = await dataAction.executeQuery(`SELECT recordid, name, nic, province, mobile, email, 
         password, empid,'' AS password FROM "${dataFile}" WHERE recordid = ${req.params.userid}`);
         res.send(result.rows[0]);
     } catch (err) {
