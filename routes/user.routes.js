@@ -13,7 +13,7 @@ router.use((req, res, next) => {
 router
     .route('/')
     .get(dataAction.authenticateToken, user.findAll)
-    .post(user.create); //dataAction.authenticateToken,
+    .post(dataAction.authenticateToken, user.create);
 
 router
     .route('/curruser')

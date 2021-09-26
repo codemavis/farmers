@@ -12,6 +12,7 @@ exports.create = async (req, res) => {
         console.log('objUser.password', objUser.password);
 
         let qStr = await dataAction.dataPut(dataFile, objUser, req);
+        console.log('qStr',qStr)
         let newUser = await dataAction.executeQuery(qStr);
 
         console.log('newUser', newUser)
@@ -45,7 +46,6 @@ exports.findOne = async (req, res) => {
 exports.findOneByEmail = async (email) => {
     try {
         let result = await dataAction.executeQuery(`SELECT * FROM "user" WHERE email = '${email}'`);
-
         return await result.rows[0];
     } catch (err) {
         console.log('findOneByEmail error', err.message);
