@@ -1,4 +1,5 @@
 const dataAction = require('../modules/dataaction');
+const groupArray = require('group-array');
 
 let dataFile = 'farmers';
 let logFile = 'lfarmers';
@@ -99,13 +100,35 @@ exports.update = async (req, res) => {
 
 exports.analyse = async (req, res) => {
     try {
-        let response = await dataAction.executeQuery(`SELECT d.recordid as "user",d.name as user_name ,b.recordid as farmer,b.name as farmer_name,a.product,c.name as product_name,
-            a.quantity::float+a.cannotsellqty::float as totalQty,
-            c.consumption::float, c.consumption::float-a.quantity::float+a.cannotsellqty::float as requiredqty
-            FROM farmerproduct a, farmers b,products c, "user" d WHERE b.recordid=a.farmer AND a.product=c.recordid 
-            AND d.recordid = b.adduser::float AND d.recordid=${req.user.userid}`);
+        // let response = await dataAction.executeQuery(`SELECT d.recordid as "user",d.name as user_name ,b.recordid as farmer,b.name as farmer_name,a.product,c.name as product_name,
+        //     a.quantity::float+a.cannotsellqty::float as totalQty,
+        //     c.consumption::float, c.consumption::float-a.quantity::float+a.cannotsellqty::float as requiredqty
+        //     FROM farmerproduct a, farmers b,products c, "user" d WHERE b.recordid=a.farmer AND a.product=c.recordid 
+        //     AND d.recordid = b.adduser::float AND d.recordid=${req.user.userid}`);
 
-        res.send(response.rows);
+        let response1 = await dataAction.executeQuery(`SELECT d.name as user_name,c.name as product_name,b.name as farmer_name,
+        (c.consumption::float-a.quantity::float+a.cannotsellqty::float)/2 as requiredqty
+        FROM farmerproduct a, farmers b,products c, "user" d WHERE b.recordid=a.farmer AND a.product=c.recordid 
+        AND d.recordid = b.adduser::float AND d.recordid=${req.user.userid}`);
+
+        let response = await dataAction.executeQuery(`SELECT d.name as user_name,c.name as product_name,b.name as farmer_name,
+        c.consumption::float-a.quantity::float+a.cannotsellqty::float as requiredqty
+        FROM farmerproduct a, farmers b,products c, "user" d WHERE b.recordid=a.farmer AND a.product=c.recordid 
+        AND d.recordid = b.adduser::float AND d.recordid=${req.user.userid}`);
+
+        let result = [], finalRes = {};
+
+        if (response.rows.length > 0) {
+            result = groupArray(response.rows, 'user_name', 'farmer_name');
+            let result1 = groupArray(response1.rows, 'user_name', 'farmer_name');
+
+            finalRes.Yala = result1;
+            finalRes.Maha = result1;
+            finalRes.Both = result;
+
+        }
+
+        res.send(finalRes);
     } catch (error) {
         console.log('analyse error', error);
     }
