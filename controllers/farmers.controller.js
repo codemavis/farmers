@@ -32,7 +32,7 @@ exports.findAll = async (req, res) => {
         for (let i = 0; i < result.rows.length; i++) {
             let farmerProd = await dataAction.executeQuery(`SELECT quantity, growarea,profit,lost,
                 sellingpricekilo,cannotsellqty FROM farmerproduct WHERE farmer = ${result.rows[i].recordid}`);
-            result.rows[i].product = farmerProd.rows;
+            result.rows[i].products = farmerProd.rows;
 
         }
         res.send(result.rows);
