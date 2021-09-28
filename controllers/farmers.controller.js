@@ -47,10 +47,14 @@ exports.findOne = async (req, res) => {
         let result = await dataAction.executeQuery(`SELECT name, "user", nic, mobile, experienceyears,
             newproduct FROM public.farmers WHERE recordid = ${req.params.farmerId}`);
 
+        if (result.rows.length <= 0) res.send({});
+
         let farmerProd = await dataAction.executeQuery(`SELECT quantity, growarea,profit,lost,
                 sellingpricekilo,cannotsellqty FROM farmerproduct WHERE farmer = ${req.params.farmerId}`);
 
         let farmers = result.rows[0];
+        console.log('result', result);
+        console.log('farmers', farmers);
         farmers.products = [];
 
         farmerProd.rows.map((prod) => {
@@ -65,15 +69,45 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     try {
-        let qStr = await dataAction.dataUpd(dataFile, req.body, req.params.farmerId);
 
+        const { products, ...objFarmer } = req.body;
+
+
+        let qStr = await dataAction.dataUpd(dataFile, objFarmer, req.params.farmerId);
         console.log('qStr', qStr);
         let updUser = await dataAction.executeQuery(qStr);
+
+        products.map(async (prod) => {
+            let farmerProdId = await dataAction.executeQuery(`select recordid from farmerproduct WHERE farmer=${req.params.farmerId} AND product=${prod.product}`);
+
+            if (farmerProdId.rows && farmerProdId.rows[0].recordid) {
+                qStr = await dataAction.dataUpd('farmerproduct', prod, farmerProdId.rows[0].recordid);
+                console.log('qStr', qStr);
+                updUser = await dataAction.executeQuery(qStr);
+            }
+
+        });
+
+        console.log('updUser', updUser);
         res.json({ code: 'ok', message: `${updUser.rowCount} row/s affected` });
 
     } catch (err) {
         console.log('update error', err.message);
         res.json({ code: 'error', message: err.message });
+    }
+}
+
+exports.analyse = async (req, res) => {
+    try {
+        let response = await dataAction.executeQuery(`SELECT d.recordid as "user",d.name as user_name ,b.recordid as farmer,b.name as farmer_name,a.product,c.name as product_name,
+            a.quantity::float+a.cannotsellqty::float as totalQty,
+            c.consumption::float, c.consumption::float-a.quantity::float+a.cannotsellqty::float as requiredqty
+            FROM farmerproduct a, farmers b,products c, "user" d WHERE b.recordid=a.farmer AND a.product=c.recordid 
+            AND d.recordid = b.adduser::float AND d.recordid=${req.user.userid}`);
+
+        res.send(response.rows);
+    } catch (error) {
+        console.log('analyse error', error);
     }
 }
 
@@ -85,6 +119,7 @@ exports.delete = async (req, res) => {
 
         // if (await updLog(req, 'D')) {
         let isDeleted = await dataAction.executeQuery(`DELETE FROM "${dataFile}" WHERE recordid=${req.params.farmerId}`);
+        isDeleted = await dataAction.executeQuery(`DELETE FROM farmerproduct WHERE farmer=${req.params.farmerId}`);
         if (isDeleted.rowCount) {
             res.json({ code: 'ok', message: 'Deleted Successfully' });
         }
@@ -93,5 +128,21 @@ exports.delete = async (req, res) => {
         res.json({ code: 'error', message: 'Unable to delete, please contact administrator' });
     } catch (error) {
         res.json({ 'error': error, message: error.message });
+    }
+}
+
+const _checkMasterData = async (userid) => {
+
+    try {
+        let result = await dataAction.executeQuery(`SELECT table_name FROM information_schema.columns WHERE column_name = 'user'`);
+        for (let i = 0; i < result.rows.length; i++) {
+            let db = result.rows[i];
+            let qres = await dataAction.executeQuery(`SELECT user FROM ${db.table_name} WHERE user='${userid}'`);
+            if (qres.rows.length) return ({ code: 'error', message: `Unable to delete since it has dependant records` });
+        }
+        return false;
+    } catch (error) {
+        console.log('error _checkMasterData', error);
+        return { code: 'error', message: error.message }
     }
 }

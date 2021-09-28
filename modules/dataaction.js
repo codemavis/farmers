@@ -39,7 +39,7 @@ exports.dataUpd = async(fileName, dataObj, recId) => {
     let str = '';
 
     Object.keys(dataObj).map((x) => {
-        key = `${x}`;
+        key = `"${x}"`;
         value = typeof(dataObj[x]) == 'string' ? `'${dataObj[x]}'` : `${dataObj[x]}`;
         str += `, ${key}=${value}`;
     });

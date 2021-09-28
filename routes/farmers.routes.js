@@ -16,6 +16,10 @@ router
     .post(dataAction.authenticateToken, farmers.create)
 
 router
+    .route('/analysis')
+    .get(dataAction.authenticateToken, farmers.analyse)
+
+router
     .route('/:farmerId')
     .get(dataAction.authenticateToken, farmers.findOne)
     .put(dataAction.authenticateToken, farmers.update)
