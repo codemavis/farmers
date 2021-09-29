@@ -12,8 +12,9 @@ exports.create = async (req, res) => {
             , newFarmer = await dataAction.executeQuery(qStr);
 
         products.map(async (prod) => {
-            prod.farmer = newFarmer.rows[0].recordid;
-            let qProdStr = await dataAction.dataPut('farmerproduct', prod, req)
+            let { selectedProduct, ...objProd } = prod;
+            objProd.farmer = newFarmer.rows[0].recordid;
+            let qProdStr = await dataAction.dataPut('farmerproduct', objProd, req)
                 , newFarmerProduct = await dataAction.executeQuery(qProdStr);
         })
 
@@ -79,10 +80,14 @@ exports.update = async (req, res) => {
         let updUser = await dataAction.executeQuery(qStr);
 
         products.map(async (prod) => {
-            let farmerProdId = await dataAction.executeQuery(`select recordid from farmerproduct WHERE farmer=${req.params.farmerId} AND product=${prod.product}`);
+
+            let { selectedProduct, ...objProd } = prod;
+            objProd.farmer = newFarmer.rows[0].recordid;
+
+            let farmerProdId = await dataAction.executeQuery(`select recordid from farmerproduct WHERE farmer=${req.params.farmerId} AND product=${objProd.product}`);
 
             if (farmerProdId.rows && farmerProdId.rows[0].recordid) {
-                qStr = await dataAction.dataUpd('farmerproduct', prod, farmerProdId.rows[0].recordid);
+                qStr = await dataAction.dataUpd('farmerproduct', objProd, farmerProdId.rows[0].recordid);
                 console.log('qStr', qStr);
                 updUser = await dataAction.executeQuery(qStr);
             }
@@ -119,12 +124,12 @@ exports.analyse = async (req, res) => {
         let result = [], finalRes = {};
 
         if (response.rows.length > 0) {
-            result = groupArray(response.rows, 'user_name', 'farmer_name');
-            let result1 = groupArray(response1.rows, 'user_name', 'farmer_name');
+            // result = groupArray(response.rows, 'user_name', 'farmer_name');
+            // let result1 = groupArray(response1.rows, 'user_name', 'farmer_name');
 
-            finalRes.Yala = result1;
-            finalRes.Maha = result1;
-            finalRes.Both = result;
+            finalRes.Yala = response1.rows;
+            finalRes.Maha = response1.rows;
+            finalRes.Both = response.rows;
 
         }
 
